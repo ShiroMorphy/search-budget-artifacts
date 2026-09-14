@@ -6,7 +6,14 @@ echo "Paper 1 Reproducibility Pipeline (Physical Review E)"
 echo "Search-Budget Artifacts in Continuous Causal Emergence"
 echo "================================================================="
 
-mkdir -p experiments figures manuscript evidence
+mkdir -p experiments figures manuscript evidence .cache/matplotlib .cache/fontconfig
+
+# Matplotlib and fontconfig need writable cache directories.  Keeping them
+# inside the repository makes the pipeline work on machines where the default
+# locations under the home directory are not writable.
+export MPLCONFIGDIR="$PWD/.cache/matplotlib"
+export XDG_CACHE_HOME="$PWD/.cache"
+export MPLBACKEND=Agg
 
 if [ ! -f data/ff30_daily_returns.csv ]; then
   echo "data/ff30_daily_returns.csv is missing."

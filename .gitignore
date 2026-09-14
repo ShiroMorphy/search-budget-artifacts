@@ -20,3 +20,6 @@ manuscript/paper1.pdf
 __pycache__/
 *.pyc
 .venv/
+
+# Matplotlib and fontconfig caches created by the pipeline
+.cache/

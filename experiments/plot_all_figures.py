@@ -11,8 +11,25 @@ Generates Figures 1 to 4 in PDF and PNG formats:
 
 import os
 import sys
+
+# Matplotlib and fontconfig need writable cache directories.  On machines where
+# the default locations under the home directory are not writable, the font
+# machinery aborts before any figure is drawn (on macOS this surfaces as
+# "Fontconfig error: No writable cache directories" followed by "Abort trap: 6").
+# Redirecting both caches into the repository removes that dependency.  These
+# assignments must precede the matplotlib import.
+_REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+_CACHE = os.path.join(_REPO_ROOT, ".cache")
+os.makedirs(os.path.join(_CACHE, "matplotlib"), exist_ok=True)
+os.makedirs(os.path.join(_CACHE, "fontconfig"), exist_ok=True)
+os.environ.setdefault("MPLCONFIGDIR", os.path.join(_CACHE, "matplotlib"))
+os.environ.setdefault("XDG_CACHE_HOME", _CACHE)
+os.environ.setdefault("MPLBACKEND", "Agg")
+
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use(os.environ["MPLBACKEND"], force=True)
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 
