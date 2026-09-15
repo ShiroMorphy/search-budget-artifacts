@@ -42,7 +42,7 @@ manuscript. A full run takes roughly one hour on two cores.
 | `evidence/` | `cefi_independent.py`, an independent reimplementation used to cross-check the estimator, and archived diagnostic tables |
 | `data/` | NOAA climate indices; a download script for the industry portfolio returns |
 | `figures/` | The four figures of the paper |
-| `manuscript/` | REVTeX 4.2 source and bibliography |
+| `manuscript/` | Elsevier `elsarticle` source and bibliography (requires the `elsarticle` LaTeX package) |
 | `formalization/` | Lean 4 proofs of the closure defect and of the Rayleigh-Ritz step |
 
 ## Formal verification

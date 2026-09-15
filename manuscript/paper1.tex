@@ -1,43 +1,49 @@
-\documentclass[aps,pre,twocolumn,floatfix]{revtex4-2}
+\documentclass[preprint,12pt]{elsarticle}
 
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsfonts}
 \usepackage{graphicx}
-\usepackage{dcolumn}
 \usepackage{bm}
 \usepackage{booktabs}
 \usepackage{microtype}
-\usepackage{xcolor}
 \usepackage[hidelinks]{hyperref}
+\usepackage{url}
 
-\graphicspath{{../figures/}}
-\renewcommand{\topfraction}{0.95}
-\renewcommand{\bottomfraction}{0.95}
-\renewcommand{\textfraction}{0.05}
-\renewcommand{\floatpagefraction}{0.85}
-
+\graphicspath{{../figures/}{figures/}}
+\journal{Chaos, Solitons \& Fractals}
 
 \begin{document}
 
-\title{Search-Budget Artifacts in Continuous Causal Emergence:\\Fixed-Step Riemannian Optimization Manufactures Apparent Scale Dependence}
+\begin{frontmatter}
 
-\author{Felipe Mora}
-\thanks{ORCID: 0009-0001-1034-5948}
-\email{felipe.morar@usm.cl}
-\affiliation{Departamento de Industrias, Universidad T\'ecnica Federico Santa Mar\'ia, Avenida Espa\~na 1680, Valpara\'iso, Chile}
-\affiliation{Facultad de Ingenier\'ia, Negocios y Ciencias Agroambientales, Universidad Vi\~na del Mar, Vi\~na del Mar, Chile}
+\title{Search-Budget Artifacts in Continuous Causal Emergence: Fixed-Step Riemannian Optimization Manufactures Apparent Scale Dependence}
 
-\date{\today}
+\author[usm,uvm]{Felipe Mora\corref{cor1}}
+\cortext[cor1]{Corresponding author.}
+\ead{felipe.morar@usm.cl}
+
+\affiliation[usm]{organization={Departamento de Industrias, Universidad T\'ecnica Federico Santa Mar\'ia},
+            addressline={Avenida Espa\~na 1680},
+            city={Valpara\'iso},
+            country={Chile}}
+
+\affiliation[uvm]{organization={Facultad de Ingenier\'ia, Negocios y Ciencias Agroambientales, Universidad Vi\~na del Mar},
+            city={Vi\~na del Mar},
+            country={Chile}}
 
 \begin{abstract}
 Continuous causal emergence quantifies macroscopic informational dominance in complex dynamical systems by maximizing an effective information objective over projection matrices on the Stiefel manifold. Here, we demonstrate that both the macro objective and its Riemannian gradient scale quadratically with the norm of the whitened transition operator. Consequently, first-order Riemannian optimization with a fixed step size violates the step length prescribed by Riemannian optimization theory and exhibits scale-dependent convergence: as the operator contracts, the manifold displacement per iteration collapses, leaving the optimizer trapped near initialization. In an empirical pipeline applied to industrial portfolio returns, this mechanism underestimates causal emergence by up to 103-fold, while corrupting the selected macro-dimension toward boundary scales. A single feasible projection that exceeds the reported optimum proves the reported value was not the maximum, without requiring any claim of global optimality. We show that established Riemannian line search, Barzilai-Borwein, and Cayley transform methods restore 100\% of an analytical ground truth without increasing the restart budget. Finally, we formulate a zero-cost diagnostic bracket consisting of a spectral upper bound and a feasible projection lower bound that reliably certifies optimizer convergence.
 \end{abstract}
 
-\maketitle
+\begin{keyword}
+Causal emergence \sep Effective information \sep Riemannian optimization \sep Stiefel manifold \sep Coarse-graining \sep Systemic risk
+\end{keyword}
+
+\end{frontmatter}
 
 \section{Introduction}
 
-Causal emergence formalizes the principle that a macroscopic description of a complex system can exhibit stronger causal efficacy than its microscopic constituent dynamics~\cite{Hoel2013,Hoel2017}. Originally formulated for discrete Markov chains via Shannon entropy coarse-graining~\cite{Rosas2020,Klein2020}, the framework was recently extended to continuous-state Gaussian stochastic processes~\cite{Liu2024,Liu2025,Yang2025}. In continuous formulations, causal emergence is quantified by effective information (EI), defined as the mutual information between an intervention distribution and the resulting system state. The macro-level representation is obtained by searching for a linear projection matrix $W$ constrained to the Stiefel manifold $\mathrm{St}(q, p) = \{W \in \mathbb{R}^{q \times p} : W W^T = I_q\}$, which maps a $p$-dimensional microscopic state to a $q$-dimensional macro state ($q < p$).
+Causal emergence formalizes the principle that a macroscopic description of a complex system can exhibit stronger causal efficacy than its microscopic constituent dynamics~\cite{Hoel2013,Hoel2017}. Originally formulated for discrete Markov chains via Shannon entropy coarse-graining~\cite{Rosas2020,Klein2020}, the framework was recently extended to continuous-state Gaussian stochastic processes~\cite{Liu2024,Liu2025,Yang2025}. In continuous formulations, causal emergence is quantified by effective information (EI), defined as the mutual information between an intervention distribution and the resulting system state. The macro-level representation is obtained by searching for a linear projection matrix $W$ constrained to the Stiefel manifold $\mathrm{St}(q, p) = \{W \in \mathbb{R}^{q \times p} : W W^T = I_q\}$, which maps a $p$-dimensional microscopic state to a $q$-dimensional macro state ($q < p$). Information-theoretic and network-based causal measures of this kind have already been applied extensively to financial systems, from entropy-based causal networks of the global foreign exchange market~\cite{Cao2017} to coarse-grained stochastic models of local distress propagation~\cite{ArenasGarcia2026}, which makes the numerical reliability of the underlying estimates a practical concern rather than a purely methodological one.
 
 In discrete systems, finding an optimal grouping is a combinatorial partitioning problem. In continuous systems, evaluating causal emergence requires maximizing a non-concave objective over a smooth matrix manifold~\cite{Liu2024}. In continuous state-space models and in our audited pipeline, this maximization is conducted via first-order Riemannian gradient descent with a fixed learning rate and a fixed iteration budget (typically 100 iterations across 12 restarts). Recently, Yang et al.~\cite{Yang2025} introduced an alternative neural network framework (NIS+), reporting optimization traces across training epochs over five repeated trials (their Fig.~3b), and explicitly noting that ``if the training is insufficient, it may lead to incorrect identification of CE'' (p.~10). However, across this literature, numerical estimates are not compared against analytical ground truths or theoretical upper bounds, and sensitivity to the search budget has not been evaluated in a controlled manner.
 
@@ -81,7 +87,7 @@ We emphasize that the projected state $y_t = W x_t$ does not in general constitu
 W x_{t+1} = W A W^T y_t + W A (I_p - W^T W) x_t + W \epsilon_{t+1},
 \label{eq:closure_defect}
 \end{equation}
-and the residual term vanishes only under exact dynamical closure, $W A (I_p - W^T W) = 0$. Equation~(\ref{eq:macro_matrices}) therefore defines the Galerkin-type projected surrogate adopted by the audited estimator, not an exact marginal dynamics. The macroscopic effective information evaluated on this reduced model is:
+and the residual term vanishes only under exact dynamical closure, $W A (I_p - W^T W) = 0$. Equation~(\ref{eq:macro_matrices}) therefore defines the Galerkin-type projected surrogate adopted by the audited estimator, not an exact marginal dynamics. Which macroscopic description one obtains consequently depends on the coarse-graining actually adopted, a general feature of reduced descriptions of stochastic dynamics~\cite{Gaveau2025}. It is this dependence that makes $W$ an object to be optimized rather than fixed a priori, and it is therefore what renders the quality of that optimization inseparable from the reported value of causal emergence. The macroscopic effective information evaluated on this reduced model is:
 \begin{equation}
 f(W) = \frac{1}{2} \left[ \ln\det(\sigma_{\mathrm{do}}^2 A_m A_m^T + \Sigma_m) - \ln\det(\Sigma_m) \right].
 \label{eq:macro_obj}
@@ -198,9 +204,9 @@ N(t) \le \frac{2 \, \mathcal{O}(t^2) \, (C t^2)}{\left[ t^2 \epsilon_0 \right]^2
 \end{equation}
 The worst-case stationarity complexity therefore remains bounded under operator contraction once the step size and the stopping tolerance are matched to the natural scale of the objective. The observed scale-dependent stagnation is attributable to step-size mismatch rather than to any intrinsic divergence of stationarity complexity.
 
-\begin{figure}[!t]
+\begin{figure}[!ht]
 \centering
-\includegraphics[width=\columnwidth]{fig1_operator_scaling.pdf}
+\includegraphics[width=0.82\linewidth]{fig1_operator_scaling.pdf}
 \caption{(a) Attention to the true analytical optimum ($\hat{f} / f^*$, \%) as a function of operator Frobenius norm $\|A\|_F$ across 18 scales. The fixed-step optimizer (red squares) collapses below $\|A\|_F \approx 1.5$, reaching 12.08\% at $\|A\|_F = 0.017$. Adaptive Armijo line search (green circles) achieves 100.00\% across all scales. The normalized fixed-step control (blue triangles) holds its attention ratio constant across scales (35.15\%), illustrating that normalization removes the scale dependence of Eq.~(\ref{eq:complexity_invariant}) even though a fixed step remains suboptimal at any single scale. (b) Norm of initial Riemannian gradient $\|\operatorname{grad}_{\mathrm{St}} f(W_0)\|$ strictly follows theoretical quadratic scaling $\mathcal{O}(\|A\|_F^2)$ (dotted line).}
 \label{fig:scaling}
 \end{figure}
@@ -248,9 +254,9 @@ Equation~(\ref{eq:spectral_bound_general}) is a closed-form, fully analytic boun
 
 \emph{Proof.} By definition of the supremum, $f^* = \sup_{W \in \mathrm{St}} f(W) \ge f(W_{\mathrm{wit}})$. If $f(W_{\mathrm{wit}}) > \hat{f}_{\mathrm{rep}}$, then $f^* > \hat{f}_{\mathrm{rep}}$, proving that $\hat{f}_{\mathrm{rep}}$ failed to achieve the maximum without requiring knowledge of $f^*$. $\blacksquare$
 
-\begin{figure}[!t]
+\begin{figure}[!ht]
 \centering
-\includegraphics[width=\columnwidth]{fig2_diagnostic_bracket.pdf}
+\includegraphics[width=0.82\linewidth]{fig2_diagnostic_bracket.pdf}
 \caption{(a) Zero-cost diagnostic bracket applied across an empirical regularization trajectory ($\lambda_0 \in [10^{-4}, 10]$) on industrial portfolio returns ($p=30$, 18 non-overlapping windows). The feasible projection lower bound (green circles) exceeds the production estimate (red squares). (b) The optimization deficit factor (feasible lower bound divided by reported estimate) rises from $1.2\times$ at weak regularization to a peak of $103.4\times$ at $\lambda_0 = 0.5$.}
 \label{fig:bracket}
 \end{figure}
@@ -263,23 +269,25 @@ We evaluate the fixed-step production optimizer and Riemannian corrections again
 
 An expanded budget of 25/150 (treated as a numerical ceiling in previous pipeline checks) requires 6.572~s and 108,750 steps, yet remains 5.69\% below the optimum (94.31\%). In contrast, standard Riemannian methods that automatically adjust step size achieve 100.00\% of the analytical optimum with the same 12 restarts: adaptive Armijo line search~\cite{Boumal2019} in 3.389~s, Riemannian Barzilai-Borwein (RBB)~\cite{Iannazzo2018} in 3.710~s, and the Wen-Yin Cayley transform method~\cite{WenYin2013} in 3.387~s. This confirms that the deficit is caused by fixed step sizing rather than an insufficient restart count.
 
-\begin{table}[!t]
+\begin{table}[!ht]
 \caption{Benchmark of manifold optimizers on a symmetric system ($p=30$) with known analytical optimum ($CE^* = 0.178174, q^* = 1$). All algorithms executed from identical random seeds. The estimate, the selected dimension, the attained fraction of the optimum and the step count are deterministic and reproduce exactly; wall-clock times were measured on a single machine and are indicative only.}
 \label{tab:benchmarks}
-\begin{ruledtabular}
+
 \footnotesize
 \setlength{\tabcolsep}{2pt}
-\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccccc@{}}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}lcccccc@{}}
+\toprule
 Method & Budget & CEFI & $q^*$ & \% Opt & Deficit & Time (s) \\
-\hline
+\midrule
 Fixed Step & 4/35 & 0.078668 & 2 & 44.15\% & 55.85\% & 0.251 \\
 Fixed Step & 12/100 & 0.158463 & 1 & 88.94\% & 11.06\% & 2.133 \\
 Fixed Step & 25/150 & 0.168031 & 1 & 94.31\% & 5.69\% & 6.572 \\
 Adaptive Armijo & 12/100 & 0.178174 & 1 & 100.00\% & 0.00\% & 3.389 \\
 Riemannian BB & 12/100 & 0.178174 & 1 & 100.00\% & 0.00\% & 3.710 \\
 Wen-Yin Cayley & 12/100 & 0.178174 & 1 & 100.00\% & 0.00\% & 3.387 \\
+\bottomrule
 \end{tabular*}
-\end{ruledtabular}
+
 \end{table}
 
 \subsection{Characterizing the Scaling Law and Breakdown Point}
@@ -290,22 +298,22 @@ Fig.~\ref{fig:scaling}(b) plots the norm of the initial Riemannian gradient, ver
 
 When $A$ is normalized by its Frobenius norm prior to fixed-step optimization and evaluated at true scale, the attention ratio remains constant at 35.15\% across small scales (blue line in Fig.~\ref{fig:scaling}(a)). Normalization thus removes the scale dependence predicted by Eq.~(\ref{eq:complexity_invariant}), while the residual gap to the optimum reflects the fact that a fixed step of $\eta = 0.05$ is not the certified step $1/\bar{L}_g$ at the normalized scale either.
 
-\begin{figure}[!t]
+\begin{figure}[!ht]
 \centering
-\includegraphics[width=\columnwidth]{fig3_dimension_corruption.pdf}
+\includegraphics[width=0.82\linewidth]{fig3_dimension_corruption.pdf}
 \caption{Corruption of selected macro-dimension $q^*$. (a) In the synthetic symmetric system ($q^*_{\mathrm{true}} = 1$), Fixed 4/35 selects $q^* = 2$ across all scales, and Fixed 12/100 switches to $q^* = 2$ when $\alpha \le 0.2$, whereas Adaptive Armijo preserves $q^* = 1$ everywhere. (b) Across 18 empirical portfolio return windows ($p=30$), increasing ridge regularization $\lambda_0$ causes the modal $q^*$ of Fixed 12/100 to jump from $q^* = 1$ to $q^* = 27$ ($\lambda_0 = 0.2$) and collapse to the micro boundary $q^* = 29$ ($\lambda_0 \ge 0.5$). The SVD bound and Adaptive Armijo confirm the true modal scale is $q^* \le 2$.}
 \label{fig:q_corruption}
 \end{figure}
 
 \subsection{Deficit on Real Empirical Data: 103x Gap}
 
-We evaluate the diagnostic bracket on an empirical continuous causal emergence pipeline applied to daily returns of 30 industry portfolios ($p=30$) over 18 non-overlapping 500-day windows, swept across ridge regularization parameters $\lambda_0 \in [10^{-4}, 10]$. Ridge regularization shrinks the estimated VAR(1) transition matrix $A$, inducing operator contraction.
+We evaluate the diagnostic bracket on an empirical continuous causal emergence pipeline applied to daily returns of 30 industry portfolios ($p=30$) over 18 non-overlapping 500-day windows, swept across ridge regularization parameters $\lambda_0 \in [10^{-4}, 10]$. Ridge regularization shrinks the estimated VAR(1) transition matrix $A$, inducing operator contraction. The matrix estimated in this way carries both the self-dynamics of each industry portfolio and the cross-industry dependence between them, the same decomposition used to characterize systemic risk through reconstructed stock-market networks~\cite{Wei2025}; ridge shrinkage acts on both channels at once, so the contraction it induces cannot be attributed to either of them alone.
 
 As shown in Fig.~\ref{fig:bracket}(a), the production values (12/100) drop from $\Delta J = 0.236$ at $\lambda_0 = 10^{-4}$ to $0.000176$ at $\lambda_0 = 0.5$. However, evaluating admissible projection matrices $W \in \mathrm{St}(1, p)$ obtained from adaptive line search yields $\Delta J = 0.018208$ at $\lambda_0 = 0.5$. In Fig.~\ref{fig:bracket}(b), the ratio between the feasible lower bound and the production estimate reaches a peak deficit of $103.4\times$ at $\lambda_0 = 0.5$ (and exceeds $14\times$ across $\lambda_0 \in [0.2, 3.0]$). Because each witness projection satisfies $W W^T = I_1$, this proves that the trajectory produced by the fixed-step optimizer was dominated by optimizer stagnation.
 
-\begin{figure}[!t]
+\begin{figure}[!ht]
 \centering
-\includegraphics[width=\columnwidth]{fig4_generalization_and_grid.pdf}
+\includegraphics[width=0.82\linewidth]{fig4_generalization_and_grid.pdf}
 \caption{Generalization and parameter disentanglement. (a) Synthetic directed network ($p=20$) sweeping physical coupling strength $g \in [0.02, 0.85]$. Weak coupling contracts the operator, causing Fixed 12/100 (red squares) to capture only 6.10\% of emergence at $g=0.10$, manufacturing an artificial threshold. Adaptive search (green circles) tracks the spectral profile. (b) Phase diagram of attention to optimum (\%) sweeping learning rate $\eta$ and iteration budget $K$ at contracted scale ($\alpha = 0.10$). Within a budget of $K \le 100$, reaching $>95\%$ with fixed steps requires scaling $\eta \ge 5.0$, whereas expanding iterations $K$ at production $\eta = 0.05$ (red star) reaches only 39.4\% at $K=1000$.}
 \label{fig:generalization}
 \end{figure}
@@ -320,7 +328,7 @@ Fig.~\ref{fig:q_corruption}(a) demonstrates this on the synthetic system: while 
 
 To verify that this failure is general to dynamical systems, we evaluated two non-financial benchmarks.
 
-First, we modeled a synthetic network of 20 interacting continuous linear units with variable coupling strength $g \in [0.02, 0.85]$: $A(g) = 0.15 I_{20} + g C$, where $C$ is a normalized directed network adjacency matrix. As shown in Fig.~\ref{fig:generalization}(a), weak physical coupling contracts the transition operator. Under Fixed 12/100, the emergence estimate captures only 6.10\% of the spectral bound at $g = 0.10$ and 17.03\% at $g = 0.02$. The resulting fixed-step curve manufactures an artificial sigmoidal threshold that mimics a dynamical phase transition. In contrast, Adaptive Armijo captures $82.10\%$ of the bound at $g = 0.10$, where the fixed-step estimate collapses to $6.10\%$, and stays between $62.79\%$ and $95.87\%$ across the full coupling range, demonstrating that the apparent threshold is an optimization artifact.
+First, we modeled a synthetic network of 20 interacting continuous linear units with variable coupling strength $g \in [0.02, 0.85]$: $A(g) = 0.15 I_{20} + g C$, where $C$ is a normalized directed network adjacency matrix. As shown in Fig.~\ref{fig:generalization}(a), weak physical coupling contracts the transition operator. Under Fixed 12/100, the emergence estimate captures only 6.10\% of the spectral bound at $g = 0.10$ and 17.03\% at $g = 0.02$. The resulting fixed-step curve manufactures an artificial sigmoidal threshold that mimics a dynamical phase transition. Transitions to coarse-grained order in coupled deterministic maps are routinely identified by precisely this kind of threshold in a coupling parameter~\cite{Rajvaidya2020}, which is what makes a manufactured threshold consequential: by inspection of the curve alone it is indistinguishable from the phenomenon such studies set out to detect. In contrast, Adaptive Armijo captures $82.10\%$ of the bound at $g = 0.10$, where the fixed-step estimate collapses to $6.10\%$, and stays between $62.79\%$ and $95.87\%$ across the full coupling range, demonstrating that the apparent threshold is an optimization artifact.
 
 Second, we systematically disentangled learning rate $\eta$ from iteration budget $K$ at a contracted scale ($\alpha = 0.10$, $\|A\|_F \approx 0.34$). As shown in Fig.~\ref{fig:generalization}(b), increasing the iteration budget from $K=100$ to $K=1000$ at the production learning rate ($\eta = 0.05$) only increases attention from 14.67\% to 39.40\%. In contrast, increasing the learning rate to match the $\mathcal{O}(\|A\|^{-2})$ curvature recovers the optimum almost immediately: at $\eta = 10.0$ the attention reaches $94.98\%$ at $K = 25$ and $98.99\%$ at $K = 50$, exceeding $99\%$ by $K = 100$, and at $\eta = 5.0$ the same thresholds are reached one grid step later.
 
@@ -332,7 +340,7 @@ In Riemannian optimization theory, convergence rates of gradient descent depend 
 
 Furthermore, adaptive line search on Stiefel manifolds is thoroughly established in numerical optimization~\cite{Boumal2019,Iannazzo2018,Oviedo2021,Francisco2012,WenYin2013}. Theorem~2.11 of Boumal et al.~\cite{Boumal2019} proves that Armijo backtracking achieves the optimal iteration complexity bound without requiring knowledge of $L_g$. The persistence of fixed-step optimization in continuous causal emergence reflects a disconnect between numerical optimization theory and complex systems practice.
 
-Selecting the maximum over candidate dimensions $q$ additionally introduces a selection bias analogous to the optimizer's curse~\cite{SmithWinkler2006}, in which maximum statistics systematically exceed their expected values under noise. Quantifying finite-sample biases in information-theoretic estimators has a long precedent in this journal~\cite{Wolpert1995,Holmes2019}; the search-budget collapse documented here shows that in continuous state spaces numerical optimization can introduce parameter-dependent artifacts that rival statistical sample effects. Multiple reported applications of continuous causal emergence share this vulnerable structure~\cite{HoelLevin2020,Tolle2026,ZhangLiu2023,HouDai2026}, whenever transition operators are estimated from data and swept across contracting parameter regimes under a fixed optimization budget.
+Selecting the maximum over candidate dimensions $q$ additionally introduces a selection bias analogous to the optimizer's curse~\cite{SmithWinkler2006}, in which maximum statistics systematically exceed their expected values under noise. Separating finite-size and finite-sample artifacts from genuine structure is a recurring problem in the analysis of complex signals: it arises for multifractal spectra estimated from financial volatility~\cite{Zhou2012}, for generalized fractal and spectral dimensions of networks~\cite{Craig2022}, and for information-theoretic quantities whose estimator bias itself depends on the sample size being varied~\cite{Wolpert1995,Holmes2019}, including time-delayed mutual information~\cite{Albers2012} and transfer entropy~\cite{Qiu2025}. The search-budget collapse documented here is that same hazard displaced from the estimator to the optimizer: in continuous state spaces the numerical search introduces parameter-dependent artifacts that rival, and in the empirical sweep reported above exceed, statistical sample effects. Multiple reported applications of continuous causal emergence share this vulnerable structure~\cite{HoelLevin2020,Tolle2026,ZhangLiu2023,HouDai2026}, whenever transition operators are estimated from data and swept across contracting parameter regimes under a fixed optimization budget. The practical stakes are highest where such estimates are read as indicators: data-driven identification of the drivers of systemic risk in financial networks~\cite{Alexandre2021} rests on the relative ordering of a measure across regimes, and a deficit that varies with the regularization applied to each regime can reorder that ranking without any change whatsoever in the underlying dynamics.
 
 To address this in future studies, we recommend a three-point reporting protocol: (i)~\textbf{Report the Zero-Cost Diagnostic Bracket:} publish the triplet $(\Delta J_{\mathrm{feas}}, \Delta J_{\mathrm{opt}}, \Delta J_{\mathrm{SVD}})$; if $\Delta J_{\mathrm{opt}} < \Delta J_{\mathrm{feas}}$, the estimate is certified sub-optimal; (ii)~\textbf{Employ Adaptive Step Sizing:} adopt adaptive Armijo backtracking, Barzilai-Borwein step selection, or Cayley retractions with best-iterate tracking; and (iii)~\textbf{Verify Scale Invariance via Normalization Controls:} when sweeping parameters that contract the operator, verify that scale-normalized controls produce consistent emergence profiles.
 
@@ -342,10 +350,28 @@ All code, figures and manuscript sources needed to regenerate every number, tabl
 
 The repository additionally contains a Lean~4 development, machine-checked against \textsc{mathlib} and free of unproved assumptions, that formally verifies two of the statements made above. The first is the exact decomposition of the projected one-step map, Eq.~(\ref{eq:closure_defect}), strengthened to an equivalence: the projected state is an autonomous linear system for every initial condition if and only if $W A (I_p - W^T W) = 0$. The second is the Rayleigh-Ritz step of Proposition~1, established in the quadratic-form order and therefore in a form more general than the eigenvalue statement used in the proof. The singular-value contraction half of Proposition~1 is not formalized.
 
-\begin{acknowledgments}
-Computational evaluations were conducted using Python, NumPy, SciPy, and Matplotlib.
-\end{acknowledgments}
 
+\section*{CRediT authorship contribution statement}
+
+\textbf{Felipe Mora:} Conceptualization, Methodology, Software, Validation, Formal analysis, Investigation, Data curation, Writing -- original draft, Writing -- review and editing, Visualization, Project administration.
+
+\section*{Declaration of competing interest}
+
+The author declares that he has no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
+
+\section*{Funding}
+
+This research did not receive any specific grant from funding agencies in the public, commercial, or not-for-profit sectors.
+
+\section*{Acknowledgements}
+
+Computational evaluations were conducted using Python, NumPy, SciPy, and Matplotlib.
+
+\section*{Declaration of generative AI and AI-assisted technologies in the writing process}
+
+During the preparation of this work the author used a generative AI assistant in order to check language and readability and to assist with the auditing of numerical code. After using this tool, the author reviewed and edited the content as needed and takes full responsibility for the content of the publication.
+
+\bibliographystyle{elsarticle-num}
 \bibliography{referencias_paper1}
 
 \end{document}

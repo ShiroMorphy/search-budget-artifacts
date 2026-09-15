@@ -47,7 +47,7 @@ python3 experiments/run_diagnostic_bracket.py
 echo "[7/7] Generating publication-quality figures (Figs. 1-4)..."
 python3 experiments/plot_all_figures.py
 
-echo "Compiling the REVTeX 4.2 manuscript (pdflatex, bibtex, pdflatex, pdflatex)..."
+echo "Compiling the manuscript (pdflatex, bibtex, pdflatex, pdflatex)..."
 cd manuscript
 pdflatex -interaction=nonstopmode paper1.tex > /dev/null
 bibtex paper1 > /dev/null
